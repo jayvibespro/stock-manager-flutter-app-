@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "765647632623",
+    "project_id": "stocks-manager-a469b",
+    "storage_bucket": "stocks-manager-a469b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:765647632623:android:1dafa699d4e0c3bf5bc31a",
+        "android_client_info": {
+          "package_name": "com.jaycode.wondercompany.stocksmanager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "765647632623-396vflglud09lntcrtpgi95o6klulps8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAI9lFxChaq1b1kQNkrkXJaTLnAWesSy4M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "765647632623-396vflglud09lntcrtpgi95o6klulps8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
