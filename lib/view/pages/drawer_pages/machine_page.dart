@@ -135,7 +135,41 @@ class _MachinePageState extends State<MachinePage> {
                                 children: [
                                   Text('${machineModel.fullName}'),
                                   Text('${machineModel.date}'),
-                                  const Text('pending...'),
+                                  Container(
+                                    child: machineModel.isDone
+                                        ? Row(
+                                            children: const [
+                                              Icon(
+                                                Icons.task_alt,
+                                                color: Colors.green,
+                                              ),
+                                              SizedBox(
+                                                width: 4,
+                                              ),
+                                              Text(
+                                                'Done',
+                                                style: TextStyle(
+                                                    color: Colors.black54),
+                                              ),
+                                            ],
+                                          )
+                                        : Row(
+                                            children: const [
+                                              Icon(
+                                                Icons.pending,
+                                                color: Colors.black54,
+                                              ),
+                                              SizedBox(
+                                                width: 4,
+                                              ),
+                                              Text(
+                                                'Pending',
+                                                style: TextStyle(
+                                                    color: Colors.black54),
+                                              ),
+                                            ],
+                                          ),
+                                  ),
                                 ],
                               ),
                               Row(
@@ -232,107 +266,83 @@ class _MachinePageState extends State<MachinePage> {
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
-                                                                        .only(
-                                                                    bottom:
-                                                                        5.0),
-                                                            child: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                          .all(
-                                                                      18.0),
-                                                              child:
-                                                                  GestureDetector(
-                                                                onTap: () {
-                                                                  editAdvanceBottomSheets(
-                                                                      context,
-                                                                      machineModel);
-                                                                },
-                                                                child: Row(
-                                                                  children: const [
-                                                                    Icon(
+                                                                        .symmetric(
+                                                                    horizontal:
+                                                                        16,
+                                                                    vertical:
+                                                                        0),
+                                                            child: ListTile(
+                                                              leading:
+                                                                  const Icon(
                                                                       Icons
-                                                                          .edit,
-                                                                      color: Colors
-                                                                          .black54,
-                                                                    ),
-                                                                    SizedBox(
-                                                                      width: 40,
-                                                                    ),
-                                                                    Text(
-                                                                      'Edit',
-                                                                      style: TextStyle(
-                                                                          color:
-                                                                              Colors.black54),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
+                                                                          .edit),
+                                                              title: const Text(
+                                                                  'Edit'),
+                                                              onTap: () {
+                                                                editAdvanceBottomSheets(
+                                                                    context,
+                                                                    machineModel);
+                                                              },
                                                             ),
                                                           ),
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
-                                                                    .all(18.0),
-                                                            child:
-                                                                GestureDetector(
+                                                                        .symmetric(
+                                                                    horizontal:
+                                                                        16,
+                                                                    vertical:
+                                                                        0),
+                                                            child: ListTile(
+                                                              leading: const Icon(
+                                                                  Icons.delete),
+                                                              title: const Text(
+                                                                  'Delete'),
                                                               onTap: () async {
                                                                 await machineKg
                                                                     .doc(
                                                                         machineModel
                                                                             .id)
                                                                     .delete();
+                                                                Navigator.pop(
+                                                                    context);
                                                               },
-                                                              child: Row(
-                                                                children: const [
-                                                                  Icon(
-                                                                    Icons
-                                                                        .delete,
-                                                                    color: Colors
-                                                                        .red,
-                                                                  ),
-                                                                  SizedBox(
-                                                                    width: 40,
-                                                                  ),
-                                                                  Text(
-                                                                    'Delete',
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .black54),
-                                                                  ),
-                                                                ],
-                                                              ),
                                                             ),
                                                           ),
                                                           Padding(
                                                             padding:
                                                                 const EdgeInsets
-                                                                    .all(18.0),
+                                                                        .symmetric(
+                                                                    horizontal:
+                                                                        16,
+                                                                    vertical:
+                                                                        0),
                                                             child:
-                                                                GestureDetector(
-                                                              onTap:
-                                                                  () async {},
-                                                              child: Row(
-                                                                children: const [
-                                                                  Icon(
-                                                                    Icons.done,
-                                                                    color: Colors
-                                                                        .green,
-                                                                  ),
-                                                                  SizedBox(
-                                                                    width: 40,
-                                                                  ),
-                                                                  Text(
-                                                                    'Done',
-                                                                    style: TextStyle(
-                                                                        color: Colors
-                                                                            .black54),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 100,
+                                                                machineModel
+                                                                        .isDone
+                                                                    ? null
+                                                                    : ListTile(
+                                                                        leading:
+                                                                            const Icon(
+                                                                          Icons
+                                                                              .done,
+                                                                          color:
+                                                                              Colors.green,
+                                                                        ),
+                                                                        title: const Text(
+                                                                            'Done'),
+                                                                        onTap:
+                                                                            () async {
+                                                                          await machineKg
+                                                                              .doc(machineModel.id)
+                                                                              .update({
+                                                                            'isDone':
+                                                                                true,
+                                                                          });
+                                                                          Navigator.pop(
+                                                                              context);
+                                                                        },
+                                                                      ),
                                                           ),
                                                         ],
                                                       ),
@@ -367,11 +377,11 @@ class _MachinePageState extends State<MachinePage> {
   }
 
   addMachineKgBottomSheets(context) {
-    var timestamp = DateTime.now();
+    var timestamp = FieldValue.serverTimestamp();
 
     setState(() {
       nameController.clear();
-      kgController.clear();
+      kgController.text = '0';
       dateController.clear();
     });
 
@@ -478,6 +488,7 @@ class _MachinePageState extends State<MachinePage> {
                               'full_name': nameController.text,
                               'kg': kgController.text,
                               'date': dateController.text,
+                              'isDone': false,
                               'timestamp': timestamp,
                             });
 
@@ -565,19 +576,19 @@ class _MachinePageState extends State<MachinePage> {
                       const SizedBox(
                         height: 15,
                       ),
-                      AdvanceEditField(
+                      MachineEditField(
                         hint: "${machineKgEditData?.fullName}",
                         lable: "Full name",
                         controller: nameController,
                         keyboard: TextInputType.text,
                       ),
-                      AdvanceEditField(
+                      MachineEditField(
                         lable: "Kilo",
                         hint: "${machineKgEditData?.kg}",
                         controller: kgController,
                         keyboard: TextInputType.number,
                       ),
-                      AdvanceEditField(
+                      MachineEditField(
                         lable: "Pick date",
                         hint: "${machineKgEditData?.date}",
                         controller: dateController,
@@ -691,13 +702,13 @@ class NewInputField extends StatelessWidget {
   }
 }
 
-class AdvanceEditField extends StatelessWidget {
+class MachineEditField extends StatelessWidget {
   TextEditingController controller;
   TextInputType keyboard;
   String lable;
   String hint;
 
-  AdvanceEditField({
+  MachineEditField({
     Key? key,
     required this.lable,
     required this.hint,
@@ -754,95 +765,119 @@ class AddMachineKgPopupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     TextEditingController adderController = TextEditingController();
-    return Hero(
-      tag: 'machineHeroTag',
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Material(
-          color: const Color(0xFFD5DBDB),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: SizedBox(
-              height: 250,
-              child: Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: Text(
-                      'Add machine Kg',
-                      style: TextStyle(fontSize: 24),
+    return SingleChildScrollView(
+      child: Hero(
+        tag: 'machineHeroTag',
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Material(
+            color: const Color(0xFFD5DBDB),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                height: 250,
+                child: Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'Add machine Kg',
+                        style: TextStyle(fontSize: 24),
+                      ),
                     ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
-                    child: Divider(),
-                  ),
-                  Center(
-                    child: Text(
-                      '${machineModel?.kg}',
-                      style: const TextStyle(
-                          fontSize: 30,
-                          color: Colors.black54,
-                          fontWeight: FontWeight.bold),
+                    const Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
+                      child: Divider(),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 4),
-                    child: TextField(
-                      autofocus: true,
-                      controller: adderController,
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        fillColor: Color(0xFFD5DBDB),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                          borderSide: BorderSide(
-                            color: Colors.transparent,
+                    Center(
+                      child: Text(
+                        '${machineModel?.kg}',
+                        style: const TextStyle(
+                            fontSize: 30,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 4),
+                      child: TextField(
+                        autofocus: true,
+                        controller: adderController,
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          fillColor: Color(0xFFD5DBDB),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10.0)),
+                            borderSide: BorderSide(
+                              color: Colors.transparent,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10.0)),
+                            borderSide: BorderSide(color: Colors.transparent),
                           ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                          borderSide: BorderSide(color: Colors.transparent),
-                        ),
+                        onChanged: (value) {},
                       ),
-                      onChanged: (value) {},
                     ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
-                    child: Divider(),
-                  ),
-                  TextButton(
-                    onPressed: () async {
-                      int newValue;
-                      newValue = int.parse(machineModel!.kg) +
-                          int.parse(adderController.text);
+                    const Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
+                      child: Divider(),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        int newValue;
 
-                      await machineKg.doc(machineModel?.id).update({
-                        'kg': newValue,
-                      });
-                      Navigator.pop(context);
-                      Get.snackbar("Info",
-                          "${adderController.text} added to the previous amount.",
-                          snackPosition: SnackPosition.BOTTOM,
-                          borderRadius: 20,
-                          duration: const Duration(seconds: 4),
-                          margin: const EdgeInsets.all(15),
-                          isDismissible: true,
-                          dismissDirection: DismissDirection.horizontal,
-                          forwardAnimationCurve: Curves.easeInOutBack);
-                    },
-                    child: const Text(
-                      'Add',
-                      style: TextStyle(fontSize: 24),
+                        if (machineModel?.kg == null) {
+                          newValue = int.parse(adderController.text);
+
+                          await machineKg.doc(machineModel?.id).set({
+                            'kg': adderController.text,
+                          });
+                          Get.snackbar("Info",
+                              "${adderController.text} Kg added to the previous amount.",
+                              snackPosition: SnackPosition.BOTTOM,
+                              borderRadius: 20,
+                              duration: const Duration(seconds: 4),
+                              margin: const EdgeInsets.all(15),
+                              isDismissible: true,
+                              dismissDirection: DismissDirection.horizontal,
+                              forwardAnimationCurve: Curves.easeInOutBack);
+                        } else {
+                          newValue = int.parse(machineModel!.kg) +
+                              int.parse(adderController.text);
+                        }
+
+                        await machineKg.doc(machineModel?.id).update({
+                          'kg': newValue.toString(),
+                        });
+                        Navigator.pop(context);
+                        Get.snackbar("Info",
+                            "${adderController.text} added to the previous amount.",
+                            snackPosition: SnackPosition.BOTTOM,
+                            borderRadius: 20,
+                            duration: const Duration(seconds: 4),
+                            margin: const EdgeInsets.all(15),
+                            isDismissible: true,
+                            dismissDirection: DismissDirection.horizontal,
+                            forwardAnimationCurve: Curves.easeInOutBack);
+                      },
+                      child: const Text(
+                        'Add',
+                        style: TextStyle(fontSize: 24),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                width: double.infinity,
               ),
-              width: double.infinity,
             ),
           ),
         ),

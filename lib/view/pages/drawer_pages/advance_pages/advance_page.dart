@@ -173,7 +173,7 @@ class _AdvancePageState extends State<AdvancePage> {
   }
 
   addAdvanceBottomSheets(context) {
-    var timestamp = DateTime.now();
+    var timestamp = FieldValue.serverTimestamp();
 
     return showModalBottomSheet(
         backgroundColor: Colors.transparent,

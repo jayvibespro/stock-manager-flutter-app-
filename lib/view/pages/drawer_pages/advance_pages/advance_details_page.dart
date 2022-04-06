@@ -79,29 +79,47 @@ class _AdvanceDetailsPageState extends State<AdvanceDetailsPage> {
             ),
           ),
           const Divider(),
-          ListTile(
-            leading: const Text("Seller"),
-            trailing: Text("${widget.advanceData?.seller}"),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            child: ListTile(
+              leading: const Text("Seller"),
+              trailing: Text("${widget.advanceData?.seller}"),
+            ),
           ),
-          ListTile(
-            leading: const Text("Buyer"),
-            trailing: Text("${widget.advanceData?.buyer}"),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            child: ListTile(
+              leading: const Text("Buyer"),
+              trailing: Text("${widget.advanceData?.buyer}"),
+            ),
           ),
-          ListTile(
-            leading: const Text("Amount"),
-            trailing: Text("${widget.advanceData?.amountPaid}"),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            child: ListTile(
+              leading: const Text("Amount"),
+              trailing: Text("${widget.advanceData?.amountPaid}"),
+            ),
           ),
-          ListTile(
-            leading: const Text("Price"),
-            trailing: Text("${widget.advanceData?.price}"),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            child: ListTile(
+              leading: const Text("Price"),
+              trailing: Text("${widget.advanceData?.price}"),
+            ),
           ),
-          ListTile(
-            leading: const Text("Status"),
-            trailing: Text("${widget.advanceData?.status}"),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            child: ListTile(
+              leading: const Text("Status"),
+              trailing: Text("${widget.advanceData?.status}"),
+            ),
           ),
-          ListTile(
-            leading: const Text("Date"),
-            trailing: Text("${widget.advanceData?.date}"),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            child: ListTile(
+              leading: const Text("Date"),
+              trailing: Text("${widget.advanceData?.date}"),
+            ),
           ),
           const Divider(),
           Padding(

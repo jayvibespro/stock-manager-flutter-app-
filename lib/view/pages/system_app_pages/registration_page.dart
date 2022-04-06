@@ -229,18 +229,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           const Text('Already have an account?'),
                           TextButton(
                             onPressed: () async {
-                              setState(() {
-                                isLoading = true;
-                              });
-                              await Future.delayed(const Duration(seconds: 1));
                               print(isLoading);
                               Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) => LoginPage()));
-                              setState(() {
-                                isLoading = false;
-                              });
                             },
                             child: const Text('Login here'),
                           )

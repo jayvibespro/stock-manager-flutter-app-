@@ -6,12 +6,14 @@ class MachineModel {
   String fullName;
   String kg;
   String date;
+  bool isDone;
 
   MachineModel({
     required this.id,
     required this.kg,
     required this.userId,
     required this.date,
+    required this.isDone,
     required this.fullName,
   });
 
@@ -19,6 +21,7 @@ class MachineModel {
       {required DocumentSnapshot<Map<String, dynamic>> doc}) {
     return MachineModel(
       userId: doc.data()!['user_id'],
+      isDone: doc.data()!['isDone'],
       id: doc.id,
       kg: doc.data()!['kg'],
       date: doc.data()!['date'],

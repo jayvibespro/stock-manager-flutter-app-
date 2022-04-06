@@ -146,6 +146,7 @@ class _StockPageState extends State<StockPage> {
                               },
                               icon: const Icon(
                                 Icons.arrow_forward_ios,
+                                size: 12,
                               ),
                             ),
                           ],
