@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:stocksmanager/hero/hero_dialog_route.dart';
 import 'package:stocksmanager/models/machine_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
@@ -116,8 +117,7 @@ class _MachinePageState extends State<MachinePage> {
                     itemBuilder: (context, index) {
                       MachineModel? machineModel = snapshot.data![index];
                       return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: const BoxDecoration(
@@ -379,10 +379,14 @@ class _MachinePageState extends State<MachinePage> {
   addMachineKgBottomSheets(context) {
     var timestamp = FieldValue.serverTimestamp();
 
+    DateTime currentDate = DateTime.now();
+    DateFormat formatter = DateFormat('dd/MM/yyyy');
+    String formattedDate = formatter.format(currentDate);
+
     setState(() {
       nameController.clear();
       kgController.text = '0';
-      dateController.clear();
+//      dateController.clear();
     });
 
     return showModalBottomSheet(
@@ -445,13 +449,14 @@ class _MachinePageState extends State<MachinePage> {
                       NewInputField(
                         lable: "Kilo",
                         controller: kgController,
+//                        formatter: ThousandsFormatter(),
                         keyboard: TextInputType.number,
                       ),
-                      NewInputField(
-                        lable: "Pick date",
-                        controller: dateController,
-                        keyboard: TextInputType.datetime,
-                      ),
+//                      NewInputField(
+//                        lable: "Pick date",
+//                        controller: dateController,
+//                        keyboard: TextInputType.datetime,
+//                      ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(0, 32, 0, 16),
                         child: GestureDetector(
@@ -487,7 +492,7 @@ class _MachinePageState extends State<MachinePage> {
                               'user_id': auth.currentUser?.uid,
                               'full_name': nameController.text,
                               'kg': kgController.text,
-                              'date': dateController.text,
+                              'date': formattedDate,
                               'isDone': false,
                               'timestamp': timestamp,
                             });
@@ -495,7 +500,7 @@ class _MachinePageState extends State<MachinePage> {
                             setState(() {
                               nameController.clear();
                               kgController.clear();
-                              dateController.clear();
+//                              dateController.clear();
                             });
 
                             Navigator.pop(context);
@@ -810,6 +815,7 @@ class AddMachineKgPopupCard extends StatelessWidget {
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
                           fillColor: Color(0xFFD5DBDB),
+                          filled: true,
                           enabledBorder: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.all(Radius.circular(10.0)),
@@ -860,7 +866,7 @@ class AddMachineKgPopupCard extends StatelessWidget {
                         });
                         Navigator.pop(context);
                         Get.snackbar("Info",
-                            "${adderController.text} added to the previous amount.",
+                            "${adderController.text} Kg added to the previous amount.",
                             snackPosition: SnackPosition.BOTTOM,
                             borderRadius: 20,
                             duration: const Duration(seconds: 4),

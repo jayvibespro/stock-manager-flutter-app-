@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:stocksmanager/models/user_model.dart';
 import 'package:stocksmanager/view/pages/drawer_pages/income_pages/income_page.dart';
 
 import '../pages/drawer_pages/advance_pages/advance_page.dart';
@@ -10,11 +13,39 @@ import '../pages/drawer_pages/machine_page.dart';
 import '../pages/drawer_pages/pumba.dart';
 import '../pages/drawer_pages/stock_pages/stock_page.dart';
 
-User? user;
+class NewDrawer extends StatefulWidget {
+  @override
+  State<NewDrawer> createState() => _NewDrawerState();
+}
 
-final FirebaseAuth auth = FirebaseAuth.instance;
+class _NewDrawerState extends State<NewDrawer> {
+  final FirebaseAuth auth = FirebaseAuth.instance;
 
-class NewDrawer extends StatelessWidget {
+  final _db = FirebaseFirestore.instance;
+
+  User? user;
+
+  String? avatarUrl;
+
+  Stream<List<UserModel>> userStream() {
+    try {
+      return _db
+          .collection('users')
+          .where('user_id', isEqualTo: auth.currentUser?.uid)
+          .snapshots()
+          .map((element) {
+        final List<UserModel> dataFromFireStore = <UserModel>[];
+        for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
+          dataFromFireStore.add(UserModel.fromDocumentSnapshot(doc: doc));
+        }
+        print(dataFromFireStore);
+        return dataFromFireStore;
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -26,18 +57,42 @@ class NewDrawer extends StatelessWidget {
             accountEmail: Text('${auth.currentUser?.email}'),
             currentAccountPicture: CircleAvatar(
               child: ClipOval(
-                child: Image.asset(
-                  'images/2.jpg',
-                  width: 90,
-                  height: 90,
-                  fit: BoxFit.cover,
+                child: StreamBuilder<List<UserModel>>(
+                  stream: userStream(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(
+                        child: Text('No data Loaded...'),
+                      );
+                    } else if (snapshot.hasError) {
+                      return const Center(
+                        child: Text('An Error Occured...'),
+                      );
+                    } else if (snapshot.hasData) {
+                      return ListView.builder(
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (context, index) {
+                            UserModel? userSnapshot = snapshot.data![index];
+                            return Image.network(
+                              userSnapshot.avatarUrl,
+                              width: 90,
+                              height: 90,
+                              fit: BoxFit.cover,
+                            );
+                          });
+                    } else {
+                      return const Center(
+                        child: Text('An Error Occured...'),
+                      );
+                    }
+                  },
                 ),
               ),
             ),
             decoration: const BoxDecoration(
               color: Colors.amberAccent,
               image: DecorationImage(
-                image: AssetImage('images/2.jpg'),
+                image: NetworkImage('images/2.jpg'),
                 fit: BoxFit.cover,
               ),
             ),

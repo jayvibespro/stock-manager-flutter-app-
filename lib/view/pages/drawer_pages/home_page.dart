@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:stocksmanager/services/auth_services.dart';
-import 'package:stocksmanager/view/components/drawer.dart';
 
+import '../bottom_navigation_bar_pages/conversation_page.dart';
 import '../bottom_navigation_bar_pages/hesabu_page.dart';
 import '../bottom_navigation_bar_pages/profile_page.dart';
-import '../bottom_navigation_bar_pages/real_home_page.dart';
 import '../bottom_navigation_bar_pages/settings_page.dart';
-import '../system_app_pages/login_page.dart';
-import '../system_app_pages/search_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -19,7 +14,7 @@ class _HomePageState extends State<HomePage> {
   String title = 'Stocks Manager';
   int currentIndex = 0;
   final screens = [
-    RealHomePage(),
+    ConversationPage(),
     HesabuPage(),
     ProfilePage(),
     SettingsPage(),
@@ -28,34 +23,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: NewDrawer(),
-      appBar: AppBar(
-        backgroundColor: Colors.amberAccent,
-        title: Text(title),
-        centerTitle: true,
-        actions: [
-          GestureDetector(
-            child: const Icon(Icons.search),
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => SearchPage()));
-            },
-          ),
-          const SizedBox(
-            width: 20,
-          ),
-          GestureDetector(
-            child: const Icon(Icons.logout),
-            onTap: () {
-              AuthServices(email: '', password: '').logoutUser();
-              Get.offAll(() => LoginPage());
-            },
-          ),
-          const SizedBox(
-            width: 20,
-          ),
-        ],
-      ),
       body: IndexedStack(
         index: currentIndex,
         children: screens,

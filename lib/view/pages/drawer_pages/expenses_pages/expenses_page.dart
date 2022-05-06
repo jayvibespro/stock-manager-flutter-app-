@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:stocksmanager/models/income_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
 import 'package:stocksmanager/view/components/drawer.dart';
@@ -26,9 +28,16 @@ class _ExpensesPageState extends State<ExpensesPage> {
 
   final _db = FirebaseFirestore.instance;
 
+  FirebaseAuth auth = FirebaseAuth.instance;
+
   Stream<List<ExpensesModel>> expensesStream() {
     try {
-      return _db.collection("expenses").snapshots().map((element) {
+      return _db
+          .collection("expenses")
+          .where("user_id", isEqualTo: auth.currentUser?.uid)
+          .orderBy('timestamp', descending: true)
+          .snapshots()
+          .map((element) {
         final List<ExpensesModel> dataFromFireStore = <ExpensesModel>[];
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
           dataFromFireStore.add(ExpensesModel.fromDocumentSnapshot(doc: doc));
@@ -233,11 +242,16 @@ class _ExpensesPageState extends State<ExpensesPage> {
   }
 
   addExpenseBottomSheets(context) {
+    var timestamp = FieldValue.serverTimestamp();
+
+    DateTime currentDate = DateTime.now();
+    DateFormat formatter = DateFormat('dd/MM/yyyy');
+    String formattedDate = formatter.format(currentDate);
+
     setState(() {
       nameController.clear();
       amountController.clear();
       descriptionController.clear();
-      dateController.clear();
     });
 
     return showModalBottomSheet(
@@ -304,11 +318,6 @@ class _ExpensesPageState extends State<ExpensesPage> {
                         keyboard: TextInputType.text,
                         controller: descriptionController,
                       ),
-                      NewInputField(
-                        lable: "Pick date",
-                        keyboard: TextInputType.datetime,
-                        controller: dateController,
-                      ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(0, 32, 0, 16),
                         child: GestureDetector(
@@ -344,13 +353,14 @@ class _ExpensesPageState extends State<ExpensesPage> {
                               'full_name': nameController.text,
                               'amount': amountController.text,
                               'description': descriptionController.text,
-                              'date': dateController.text,
+                              'date': formattedDate,
+                              'user_id': auth.currentUser?.uid,
+                              'timestamp': timestamp,
                             });
                             setState(() {
                               nameController.clear();
                               amountController.clear();
                               descriptionController.clear();
-                              dateController.clear();
                             });
                             Navigator.pop(context);
                           },

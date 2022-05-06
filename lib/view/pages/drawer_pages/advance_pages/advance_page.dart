@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:stocksmanager/models/advance_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
 import 'package:stocksmanager/view/components/drawer.dart';
@@ -121,8 +122,7 @@ class _AdvancePageState extends State<AdvancePage> {
                   AdvanceModel advanceSnapshot = snapshot.data![index];
                   return GestureDetector(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                       child: Container(
                         padding: const EdgeInsets.all(16.0),
                         height: 65,
@@ -174,6 +174,10 @@ class _AdvancePageState extends State<AdvancePage> {
 
   addAdvanceBottomSheets(context) {
     var timestamp = FieldValue.serverTimestamp();
+    String dropdownValue = 'Office';
+    DateTime currentDate = DateTime.now();
+    DateFormat formatter = DateFormat('dd/MM/yyyy');
+    String formattedDate = formatter.format(currentDate);
 
     return showModalBottomSheet(
         backgroundColor: Colors.transparent,
@@ -247,15 +251,32 @@ class _AdvancePageState extends State<AdvancePage> {
                         controller: priceController,
                         keyboard: TextInputType.number,
                       ),
-                      NewInputField(
-                        lable: "Status",
-                        controller: statusController,
-                        keyboard: TextInputType.text,
-                      ),
-                      NewInputField(
-                        lable: "Pick date",
-                        controller: dateController,
-                        keyboard: TextInputType.datetime,
+//                      NewInputField(
+//                        lable: "Status",
+//                        controller: statusController,
+//                        keyboard: TextInputType.text,
+//                      ),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(8),
+                        child: DropdownButton<String>(
+                          value: dropdownValue,
+                          icon: const Icon(Icons.arrow_drop_down_circle),
+                          elevation: 16,
+                          style: const TextStyle(color: Colors.deepPurple),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              dropdownValue = newValue!;
+                            });
+                          },
+                          items: <String>['Office', 'Anayo']
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 32, 8, 0),
@@ -294,12 +315,11 @@ class _AdvancePageState extends State<AdvancePage> {
                               'amount paid': amountPaidController.text,
                               'price': priceController.text,
                               'user_id': auth.currentUser?.uid,
-                              'date': dateController.text,
-                              'status': statusController.text,
+                              'date': formattedDate,
+                              'status': dropdownValue,
                               'timestamp': timestamp,
                             });
 
-                            statusController.clear();
                             sellerController.clear();
                             amountPaidController.clear();
                             priceController.clear();
@@ -376,6 +396,43 @@ class NewInputField extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class DropdownMenu extends StatefulWidget {
+  const DropdownMenu({Key? key}) : super(key: key);
+
+  @override
+  State<DropdownMenu> createState() => _DropdownMenuState();
+}
+
+class _DropdownMenuState extends State<DropdownMenu> {
+  String dropdownValue = 'Office';
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<String>(
+      value: dropdownValue,
+      icon: const Icon(Icons.arrow_downward),
+      elevation: 16,
+      style: const TextStyle(color: Colors.deepPurple),
+      underline: Container(
+        height: 2,
+        color: Colors.deepPurpleAccent,
+      ),
+      onChanged: (String? newValue) {
+        setState(() {
+          dropdownValue = newValue!;
+        });
+      },
+      items: <String>['Office', 'Anayo']
+          .map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
     );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:stocksmanager/models/stock_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
 import 'package:stocksmanager/view/components/drawer.dart';
@@ -30,9 +32,16 @@ class _StockPageState extends State<StockPage> {
 
   final _db = FirebaseFirestore.instance;
 
+  FirebaseAuth auth = FirebaseAuth.instance;
+
   Stream<List<StockModel>> incomeStream() {
     try {
-      return _db.collection("stock").snapshots().map((element) {
+      return _db
+          .collection("stock")
+          .where("user_id", isEqualTo: auth.currentUser?.uid)
+          .orderBy('timestamp', descending: true)
+          .snapshots()
+          .map((element) {
         final List<StockModel> dataFromFireStore = <StockModel>[];
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
           dataFromFireStore.add(StockModel.fromDocumentSnapshot(doc: doc));
@@ -120,8 +129,7 @@ class _StockPageState extends State<StockPage> {
                   StockModel stockModel = snapshot.data![index];
                   return GestureDetector(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                       child: Container(
                         decoration: const BoxDecoration(
                           color: Color(0xFFECF0F1),
@@ -173,6 +181,12 @@ class _StockPageState extends State<StockPage> {
   }
 
   addStockBottomSheets(context) {
+    var timestamp = FieldValue.serverTimestamp();
+
+    DateTime currentDate = DateTime.now();
+    DateFormat formatter = DateFormat('dd/MM/yyyy');
+    String formattedDate = formatter.format(currentDate);
+
     setState(() {
       nameController.clear();
       guniaController.clear();
@@ -180,7 +194,6 @@ class _StockPageState extends State<StockPage> {
       kambaController.clear();
       koboaController.clear();
       nauliController.clear();
-      dateController.clear();
       deniController.clear();
       changanyaController.clear();
       tumiziController.clear();
@@ -271,10 +284,6 @@ class _StockPageState extends State<StockPage> {
                         lable: "Changanya",
                         controller: changanyaController,
                       ),
-                      NewInputField(
-                        lable: "Pick date",
-                        controller: dateController,
-                      ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(0, 32, 0, 16),
                         child: GestureDetector(
@@ -314,9 +323,11 @@ class _StockPageState extends State<StockPage> {
                               'kago': kagoController.text,
                               'koboa': koboaController.text,
                               'tumizi': tumiziController.text,
-                              'date': dateController.text,
+                              'date': formattedDate,
                               'kamba': kambaController.text,
                               'deni': deniController.text,
+                              'user_id': auth.currentUser?.uid,
+                              'timestamp': timestamp,
                             });
                             setState(() {
                               nameController.clear();
@@ -325,7 +336,6 @@ class _StockPageState extends State<StockPage> {
                               kambaController.clear();
                               koboaController.clear();
                               nauliController.clear();
-                              dateController.clear();
                               deniController.clear();
                               changanyaController.clear();
                               tumiziController.clear();

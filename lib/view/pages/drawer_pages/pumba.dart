@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:stocksmanager/hero/hero_dialog_route.dart';
 import 'package:stocksmanager/models/pumba_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
 import 'package:stocksmanager/view/components/drawer.dart';
@@ -15,6 +18,7 @@ class PumbaPage extends StatefulWidget {
 
 class _PumbaPageState extends State<PumbaPage> {
   var pumba = FirebaseFirestore.instance.collection('pumba');
+  FirebaseAuth auth = FirebaseAuth.instance;
 
   TextEditingController guniaController = TextEditingController();
   TextEditingController dateController = TextEditingController();
@@ -23,7 +27,12 @@ class _PumbaPageState extends State<PumbaPage> {
 
   Stream<List<PumbaModel>> pumbaStream() {
     try {
-      return _db.collection("pumba").snapshots().map((element) {
+      return _db
+          .collection("pumba")
+          .where('user_id', isEqualTo: auth.currentUser!.uid)
+          .orderBy('timestamp', descending: true)
+          .snapshots()
+          .map((element) {
         final List<PumbaModel> dataFromFireStore = <PumbaModel>[];
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
           dataFromFireStore.add(PumbaModel.fromDocumentSnapshot(doc: doc));
@@ -78,102 +87,131 @@ class _PumbaPageState extends State<PumbaPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-//          Navigator.of(context).push(MaterialPageRoute(builder: (context) {
-//            return bottomSheets(context);
-//
-//          }));
-//
-//
-//          Navigator.push(context,
-//              MaterialPageRoute(builder: (context) => bottomSheets(context)));
           addPumbaBottomSheets(context);
         },
         child: const Icon(Icons.add),
         backgroundColor: Colors.amberAccent,
       ),
-      body: StreamBuilder<List<PumbaModel>>(
-        stream: pumbaStream(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(
-              child: Text('No Data Loaded...'),
-            );
-          } else if (snapshot.hasError) {
-            return const Center(
-              child: Text('An Error Occured...'),
-            );
-          } else if (snapshot.hasData) {
-            return ListView.builder(
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
-                itemCount: snapshot.data!.length,
-                itemBuilder: (context, index) {
-                  PumbaModel? pumbaModel = snapshot.data![index];
-                  return Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFECF0F1),
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(12.0),
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(8),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('${pumbaModel.date}'),
-                          Text('${pumbaModel.gunia}'),
-                          Row(
+      body: Stack(
+        children: [
+          StreamBuilder<List<PumbaModel>>(
+            stream: pumbaStream(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: Text('No Data Loaded...'),
+                );
+              } else if (snapshot.hasError) {
+                return const Center(
+                  child: Text('An Error Occured...'),
+                );
+              } else if (snapshot.hasData) {
+                return ListView.builder(
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      PumbaModel? pumbaModel = snapshot.data![index];
+                      return Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFECF0F1),
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(12.0),
+                            ),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Container(
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFD5DBDB),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(12.0),
+                              Text('${pumbaModel.date}'),
+                              Text('${pumbaModel.gunia}'),
+                              Row(
+                                children: [
+                                  Container(
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFD5DBDB),
+                                      borderRadius: BorderRadius.all(
+                                        Radius.circular(12.0),
+                                      ),
+                                    ),
+                                    padding:
+                                        const EdgeInsets.fromLTRB(30, 8, 30, 8),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          HeroDialogRoute(
+                                            builder: (context) => Center(
+                                              child: AddPumbaPopupCard(
+                                                  pumbaModel: pumbaModel),
+                                            ),
+                                            settings: const RouteSettings(),
+                                          ),
+                                        );
+                                      },
+                                      child: Hero(
+                                        tag: 'pumbaHeroTag',
+                                        child: Material(
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          child: Container(
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFFD5DBDB),
+                                              borderRadius: BorderRadius.all(
+                                                Radius.circular(12.0),
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.fromLTRB(
+                                                30, 8, 30, 8),
+                                            child: const Text('Add'),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                                padding:
-                                    const EdgeInsets.fromLTRB(30, 8, 30, 8),
-                                child: const Text('Add'),
-                              ),
-                              IconButton(
-                                onPressed: () async {
-                                  await pumba.doc(pumbaModel.id).delete();
-                                },
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
+                                  IconButton(
+                                    onPressed: () async {
+                                      await pumba.doc(pumbaModel.id).delete();
+                                    },
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                });
-          } else {
-            return const Center(
-              child: Text('An Error Occured...'),
-            );
-          }
-        },
+                        ),
+                      );
+                    });
+              } else {
+                return const Center(
+                  child: Text('An Error Occured...'),
+                );
+              }
+            },
+          ),
+        ],
       ),
     );
   }
 
   addPumbaBottomSheets(context) {
+    var timestamp = FieldValue.serverTimestamp();
+
+    DateTime currentDate = DateTime.now();
+    DateFormat formatter = DateFormat('dd/MM/yyyy');
+    String formattedDate = formatter.format(currentDate);
+
     setState(() {
       guniaController.clear();
-      dateController.clear();
     });
 
     return showModalBottomSheet(
         backgroundColor: Colors.transparent,
-        isScrollControlled: true,
         context: context,
         builder: (context) {
           return Padding(
@@ -222,11 +260,8 @@ class _PumbaPageState extends State<PumbaPage> {
                       ),
                       NewInputField(
                         lable: "Idadi ya gunia",
+                        inputType: TextInputType.number,
                         controller: guniaController,
-                      ),
-                      NewInputField(
-                        lable: "Pick date",
-                        controller: dateController,
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(0, 32, 0, 16),
@@ -261,12 +296,13 @@ class _PumbaPageState extends State<PumbaPage> {
                           onTap: () async {
                             await pumba.add({
                               'gunia': guniaController.text,
-                              'date': dateController.text,
+                              'date': formattedDate,
+                              'timestamp': timestamp,
+                              'user_id': auth.currentUser?.uid,
                             });
 
                             setState(() {
                               guniaController.clear();
-                              dateController.clear();
                             });
 
                             Navigator.pop(context);
@@ -288,9 +324,12 @@ class _PumbaPageState extends State<PumbaPage> {
 class NewInputField extends StatelessWidget {
   String lable;
   TextEditingController controller;
+  TextInputType inputType;
+
   NewInputField({
     Key? key,
     required this.lable,
+    required this.inputType,
     required this.controller,
   }) : super(key: key);
 
@@ -301,6 +340,7 @@ class NewInputField extends StatelessWidget {
       child: Container(
         child: TextField(
           controller: controller,
+          keyboardType: inputType,
           decoration: InputDecoration(
             hintText: lable,
             labelText: lable,
@@ -326,6 +366,138 @@ class NewInputField extends StatelessWidget {
               offset: Offset(2, 6),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class AddPumbaPopupCard extends StatelessWidget {
+  PumbaModel? pumbaModel;
+
+  AddPumbaPopupCard({required this.pumbaModel});
+
+  var pumba = FirebaseFirestore.instance.collection('pumba');
+
+  @override
+  Widget build(BuildContext context) {
+    TextEditingController adderController = TextEditingController();
+    return SingleChildScrollView(
+      child: Hero(
+        tag: 'pumbaHeroTag',
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Material(
+            color: const Color(0xFFD5DBDB),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: SizedBox(
+                height: 250,
+                child: Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'Gunia za pumba',
+                        style: TextStyle(fontSize: 24),
+                      ),
+                    ),
+                    const Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
+                      child: Divider(),
+                    ),
+                    Center(
+                      child: Text(
+                        '${pumbaModel?.gunia}',
+                        style: const TextStyle(
+                            fontSize: 30,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 4),
+                      child: TextField(
+                        autofocus: true,
+                        controller: adderController,
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          fillColor: Color(0xFFD5DBDB),
+                          filled: true,
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10.0)),
+                            borderSide: BorderSide(
+                              color: Colors.transparent,
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(10.0)),
+                            borderSide: BorderSide(color: Colors.transparent),
+                          ),
+                        ),
+                        onChanged: (value) {},
+                      ),
+                    ),
+                    const Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.0, vertical: 0),
+                      child: Divider(),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        int newValue;
+
+                        if (pumbaModel?.gunia == null) {
+                          newValue = int.parse(adderController.text);
+
+                          await pumba.doc(pumbaModel?.id).set({
+                            'gunia': adderController.text,
+                          });
+                          Get.snackbar("Info",
+                              "${adderController.text} Kg added to the previous amount.",
+                              snackPosition: SnackPosition.BOTTOM,
+                              borderRadius: 20,
+                              duration: const Duration(seconds: 4),
+                              margin: const EdgeInsets.all(15),
+                              isDismissible: true,
+                              dismissDirection: DismissDirection.horizontal,
+                              forwardAnimationCurve: Curves.easeInOutBack);
+                        } else {
+                          newValue = int.parse(pumbaModel!.gunia) +
+                              int.parse(adderController.text);
+                        }
+
+                        await pumba.doc(pumbaModel?.id).update({
+                          'gunia': newValue.toString(),
+                        });
+                        Navigator.pop(context);
+                        Get.snackbar("Info",
+                            "${adderController.text} added to the previous amount.",
+                            snackPosition: SnackPosition.BOTTOM,
+                            borderRadius: 20,
+                            duration: const Duration(seconds: 4),
+                            margin: const EdgeInsets.all(15),
+                            isDismissible: true,
+                            dismissDirection: DismissDirection.horizontal,
+                            forwardAnimationCurve: Curves.easeInOutBack);
+                      },
+                      child: const Text(
+                        'Add',
+                        style: TextStyle(fontSize: 24),
+                      ),
+                    ),
+                  ],
+                ),
+                width: double.infinity,
+              ),
+            ),
+          ),
         ),
       ),
     );

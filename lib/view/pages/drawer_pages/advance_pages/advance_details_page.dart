@@ -184,6 +184,8 @@ class _AdvanceDetailsPageState extends State<AdvanceDetailsPage> {
   }
 
   editAdvanceBottomSheets(context, AdvanceModel? advanceEditData) {
+    String dropdownValue = 'Office';
+
     setState(() {
       sellerController.text = advanceEditData!.seller;
       buyerController.text = advanceEditData.buyer;
@@ -271,18 +273,42 @@ class _AdvanceDetailsPageState extends State<AdvanceDetailsPage> {
                         controller: priceController,
                         keyboard: TextInputType.number,
                       ),
-                      AdvanceEditField(
-                        lable: "Status",
-                        hint: "${advanceEditData?.status}",
-                        controller: statusController,
-                        keyboard: TextInputType.text,
-                      ),
+//                      AdvanceEditField(
+//                        lable: "Status",
+//                        hint: "${advanceEditData?.status}",
+//                        controller: statusController,
+//                        keyboard: TextInputType.text,
+//                      ),
                       AdvanceEditField(
                         lable: "Pick date",
                         hint: "${advanceEditData?.date}",
                         controller: dateController,
                         keyboard: TextInputType.datetime,
                       ),
+
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(8),
+                        child: DropdownButton<String>(
+                          value: dropdownValue,
+                          icon: const Icon(Icons.arrow_drop_down_circle),
+                          elevation: 16,
+                          style: const TextStyle(color: Colors.deepPurple),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              dropdownValue = newValue!;
+                            });
+                          },
+                          items: <String>['Office', 'Anayo']
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 32, 8, 0),
                         child: GestureDetector(
@@ -320,7 +346,7 @@ class _AdvanceDetailsPageState extends State<AdvanceDetailsPage> {
                               'amount paid': amountPaidController.text,
                               'price': priceController.text,
                               'date': dateController.text,
-                              'status': statusController.text
+                              'status': dropdownValue,
                             });
                             setState(() {
                               statusController.clear();

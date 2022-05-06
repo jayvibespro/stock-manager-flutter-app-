@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ExpensesModel {
   String id;
+  String userId;
   String fullName;
   String amount;
   String date;
@@ -9,6 +10,7 @@ class ExpensesModel {
 
   ExpensesModel({
     required this.id,
+    required this.userId,
     required this.fullName,
     required this.amount,
     required this.description,
@@ -21,6 +23,7 @@ class ExpensesModel {
       id: doc.id,
       fullName: doc.data()!['full_name'],
       amount: doc.data()!['amount'],
+      userId: doc.data()!['user_id'],
       description: doc.data()!['description'],
       date: doc.data()!['date'],
     );

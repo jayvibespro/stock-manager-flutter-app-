@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:stocksmanager/models/income_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
 import 'package:stocksmanager/view/components/drawer.dart';
@@ -14,6 +16,8 @@ class IncomePage extends StatefulWidget {
 }
 
 class _IncomePageState extends State<IncomePage> {
+  FirebaseAuth auth = FirebaseAuth.instance;
+
   var income = FirebaseFirestore.instance.collection('income');
 
   TextEditingController nameController = TextEditingController();
@@ -28,7 +32,12 @@ class _IncomePageState extends State<IncomePage> {
 
   Stream<List<ExpensesModel>> incomeStream() {
     try {
-      return _db.collection("income").snapshots().map((element) {
+      return _db
+          .collection("income")
+          .where("user_id", isEqualTo: auth.currentUser?.uid)
+          .orderBy('timestamp', descending: true)
+          .snapshots()
+          .map((element) {
         final List<ExpensesModel> dataFromFireStore = <ExpensesModel>[];
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
           dataFromFireStore.add(ExpensesModel.fromDocumentSnapshot(doc: doc));
@@ -233,11 +242,16 @@ class _IncomePageState extends State<IncomePage> {
   }
 
   addIncomeBottomSheets(context) {
+    var timestamp = FieldValue.serverTimestamp();
+
+    DateTime currentDate = DateTime.now();
+    DateFormat formatter = DateFormat('dd/MM/yyyy');
+    String formattedDate = formatter.format(currentDate);
+
     setState(() {
       nameController.clear();
       amountController.clear();
       descriptionController.clear();
-      dateController.clear();
     });
     return showModalBottomSheet(
         backgroundColor: Colors.transparent,
@@ -303,11 +317,6 @@ class _IncomePageState extends State<IncomePage> {
                         keyboard: TextInputType.text,
                         controller: descriptionController,
                       ),
-                      NewInputField(
-                        lable: "Pick date",
-                        keyboard: TextInputType.datetime,
-                        controller: dateController,
-                      ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(0, 32, 0, 16),
                         child: GestureDetector(
@@ -343,13 +352,15 @@ class _IncomePageState extends State<IncomePage> {
                               'full_name': nameController.text,
                               'amount': amountController.text,
                               'description': descriptionController.text,
-                              'date': dateController.text,
+                              'date': formattedDate,
+                              'user_id': auth.currentUser?.uid,
+                              'timestamp': timestamp,
                             });
+
                             setState(() {
                               nameController.clear();
                               amountController.clear();
                               descriptionController.clear();
-                              dateController.clear();
                             });
                             Navigator.pop(context);
                           },

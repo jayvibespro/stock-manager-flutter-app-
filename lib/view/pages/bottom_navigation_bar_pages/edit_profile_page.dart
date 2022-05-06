@@ -1,16 +1,35 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:stocksmanager/models/user_model.dart';
 
 class EditProfilePage extends StatefulWidget {
+  UserModel? userModel;
+
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
+
+  EditProfilePage({this.userModel});
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
+  var userFromFirebase = FirebaseFirestore.instance.collection('users');
+
+  TextEditingController nameController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+  TextEditingController genderController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController locationController = TextEditingController();
+
+  UploadTask? task;
   File? image;
+  String avatarUrl = '';
+
   Future pickImage(ImageSource source) async {
     try {
       var image = await ImagePicker().pickImage(source: source);
@@ -22,6 +41,42 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } on PlatformException catch (e) {
       print('Failed to pick imag: $e');
     }
+
+    if (image == null) return;
+
+    final imageName = image!.path;
+
+    final destination = 'images/$imageName';
+
+    var snapshot = await FirebaseStorage.instance
+        .ref()
+        .child(destination)
+        .putFile(image!)
+        .whenComplete(() => null);
+    var downloadUrl = await snapshot.ref.getDownloadURL();
+    setState(() {
+      avatarUrl = downloadUrl;
+    });
+    print(avatarUrl);
+  }
+
+  Future uploadImage() async {
+    if (image == null) return;
+
+    final imageName = image!.path;
+
+    final destination = 'images/$imageName';
+
+    var snapshot = await FirebaseStorage.instance
+        .ref()
+        .child(destination)
+        .putFile(image!)
+        .whenComplete(() => null);
+    var downloadUrl = await snapshot.ref.getDownloadURL();
+    setState(() {
+      avatarUrl = downloadUrl;
+    });
+    print(avatarUrl);
   }
 
   @override
@@ -62,7 +117,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               width: 200.0,
                               height: 200.0,
                             )
-                          : const FlutterLogo(),
+                          : Image.network(
+                              widget.userModel!.avatarUrl,
+                              fit: BoxFit.cover,
+                              width: 200.0,
+                              height: 200.0,
+                            ),
                     ),
                   ),
                 ),
@@ -89,6 +149,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
                 onTap: () {
                   setState(() {
+                    setState(() {
+                      emailController.text = widget.userModel!.email;
+                      nameController.text = widget.userModel!.name;
+                      phoneController.text = widget.userModel!.phoneNumber;
+                      genderController.text = widget.userModel!.gender;
+                      locationController.text = widget.userModel!.location;
+                    });
+
                     showModalBottomSheet(
                         backgroundColor: Colors.transparent,
                         context: context,
@@ -183,17 +251,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: Container(
-                  child: const TextField(
+                  child: TextField(
+                    keyboardType: TextInputType.name,
+                    controller: nameController,
                     decoration: InputDecoration(
-                      labelText: "Name",
-                      prefixIcon: Icon(Icons.person),
-                      enabledBorder: OutlineInputBorder(
+                      labelText: "${widget.userModel?.name}",
+                      prefixIcon: const Icon(Icons.person),
+                      enabledBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(
                           color: Colors.transparent,
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(color: Colors.transparent),
                       ),
@@ -215,17 +285,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: Container(
-                  child: const TextField(
+                  child: TextField(
+                    keyboardType: TextInputType.phone,
+                    controller: phoneController,
                     decoration: InputDecoration(
-                      labelText: "Phone number",
-                      prefixIcon: Icon(Icons.call),
-                      enabledBorder: OutlineInputBorder(
+                      labelText: "${widget.userModel?.phoneNumber}",
+                      prefixIcon: const Icon(Icons.call),
+                      enabledBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(
                           color: Colors.transparent,
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(color: Colors.transparent),
                       ),
@@ -247,17 +319,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: Container(
-                  child: const TextField(
+                  child: TextField(
+                    keyboardType: TextInputType.name,
+                    controller: genderController,
                     decoration: InputDecoration(
-                      labelText: "Gender",
-                      prefixIcon: Icon(Icons.transgender),
-                      enabledBorder: OutlineInputBorder(
+                      labelText: "${widget.userModel?.gender}",
+                      prefixIcon: const Icon(Icons.transgender),
+                      enabledBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(
                           color: Colors.transparent,
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(color: Colors.transparent),
                       ),
@@ -279,17 +353,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: Container(
-                  child: const TextField(
+                  child: TextField(
+                    keyboardType: TextInputType.emailAddress,
+                    controller: emailController,
                     decoration: InputDecoration(
-                      labelText: "Email",
-                      prefixIcon: Icon(Icons.mail_outline),
-                      enabledBorder: OutlineInputBorder(
+                      labelText: "${widget.userModel?.email}",
+                      prefixIcon: const Icon(Icons.mail_outline),
+                      enabledBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(
                           color: Colors.transparent,
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(color: Colors.transparent),
                       ),
@@ -311,17 +387,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: Container(
-                  child: const TextField(
+                  child: TextField(
+                    keyboardType: TextInputType.text,
+                    controller: locationController,
                     decoration: InputDecoration(
-                      labelText: "Location",
-                      prefixIcon: Icon(Icons.location_on),
-                      enabledBorder: OutlineInputBorder(
+                      labelText: "${widget.userModel?.location}",
+                      prefixIcon: const Icon(Icons.location_on),
+                      enabledBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(
                           color: Colors.transparent,
                         ),
                       ),
-                      focusedBorder: OutlineInputBorder(
+                      focusedBorder: const OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(10.0)),
                         borderSide: BorderSide(color: Colors.transparent),
                       ),
@@ -370,7 +448,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                     ),
                   ),
-                  onTap: () {
+                  onTap: () async {
+                    uploadImage;
+
+                    await userFromFirebase.doc(widget.userModel?.id).update({
+                      'email': emailController.text,
+                      'user_name': nameController.text,
+                      'phone_number': phoneController.text,
+                      'gender': genderController.text,
+                      'location': locationController.text,
+                      'avatar_url': avatarUrl,
+                    });
+
+                    Get.snackbar(
+                        "Message", "User information successfully updated.",
+                        snackPosition: SnackPosition.BOTTOM,
+                        borderRadius: 20,
+                        duration: const Duration(seconds: 4),
+                        margin: const EdgeInsets.all(15),
+                        isDismissible: true,
+                        dismissDirection: DismissDirection.horizontal,
+                        forwardAnimationCurve: Curves.easeInOutBack);
+
                     Navigator.pop(context);
                   },
                 ),

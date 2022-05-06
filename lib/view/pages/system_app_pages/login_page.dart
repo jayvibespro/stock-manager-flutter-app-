@@ -140,55 +140,32 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       onTap: () async {
-                        if (emailController == null ||
-                            passwordController == null) {
-                          Get.snackbar("Message", "Please fill all credentials",
-                              snackPosition: SnackPosition.BOTTOM,
-                              borderRadius: 20,
-                              duration: const Duration(seconds: 4),
-                              margin: const EdgeInsets.all(15),
-                              isDismissible: true,
-                              dismissDirection: DismissDirection.horizontal,
-                              forwardAnimationCurve: Curves.easeInOutBack);
-                        } else if (emailController != null &&
-                            passwordController != null) {
-                          setState(() {
-                            isLoading = true;
-                          });
-                          AuthServices(
-                                  email: emailController!.text,
-                                  password: passwordController!.text)
-                              .loginUser();
-                          await Future.delayed(const Duration(seconds: 2));
+                        setState(() {
+                          isLoading = true;
+                        });
 
-                          if (auth.currentUser != null) {
-                            setState(() {
-                              isLoading = false;
-                            });
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => HomePage()));
-                          } else {
-                            setState(() {
-                              isLoading = false;
-                            });
-                            Get.snackbar(
-                                "Message", "Please enter correct credentials",
-                                snackPosition: SnackPosition.BOTTOM,
-                                borderRadius: 20,
-                                duration: const Duration(seconds: 4),
-                                margin: const EdgeInsets.all(15),
-                                isDismissible: true,
-                                dismissDirection: DismissDirection.horizontal,
-                                forwardAnimationCurve: Curves.easeInOutBack);
-                          }
+                        AuthServices(
+                                email: emailController!.text,
+                                password: passwordController!.text)
+                            .loginUser();
+
+                        await Future.delayed(const Duration(seconds: 3));
+
+                        if (auth.currentUser != null) {
+                          setState(() {
+                            isLoading = false;
+                          });
+
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => HomePage()));
                         } else {
                           setState(() {
                             isLoading = false;
                           });
-                          Get.snackbar(
-                              "Message", "Please enter correct credentials",
+                          Get.snackbar("Error",
+                              "Failed to login user. Please try again.",
                               snackPosition: SnackPosition.BOTTOM,
                               borderRadius: 20,
                               duration: const Duration(seconds: 4),

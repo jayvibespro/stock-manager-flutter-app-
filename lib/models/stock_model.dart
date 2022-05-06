@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class StockModel {
   String id;
+  String userId;
   String fullName;
   String gunia;
   String deni;
@@ -17,6 +18,7 @@ class StockModel {
     required this.id,
     required this.gunia,
     required this.nauli,
+    required this.userId,
     required this.tumizi,
     required this.date,
     required this.fullName,
@@ -31,6 +33,7 @@ class StockModel {
       {required DocumentSnapshot<Map<String, dynamic>> doc}) {
     return StockModel(
       id: doc.id,
+      userId: doc.data()!['user_id'],
       gunia: doc.data()!['gunia'],
       nauli: doc.data()!['nauli'],
       tumizi: doc.data()!['tumizi'],

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -9,14 +10,26 @@ class AuthServices {
 
   AuthServices({required this.email, required this.password});
 
-  createUser() async {
+  createUser(String name) async {
     try {
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: this.email,
         password: this.password,
       );
-      Get.snackbar("Message", "User successfully created.",
+
+      FirebaseAuth _auth = FirebaseAuth.instance;
+
+      var user = FirebaseFirestore.instance.collection('users').add({
+        'name': name,
+        'email': _auth.currentUser?.email,
+        'user_id': _auth.currentUser?.uid,
+        'gender': '',
+        'location': '',
+        'phone_number': '',
+        'avatar_url': '',
+      });
+      Get.snackbar("Message", "User account successfully created.",
           snackPosition: SnackPosition.BOTTOM,
           borderRadius: 20,
           duration: const Duration(
