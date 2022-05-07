@@ -5,13 +5,13 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:stocksmanager/models/group_model.dart';
-import 'package:stocksmanager/models/user_model.dart';
+import 'package:stocksmanager/models/single_chat_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
 import 'package:stocksmanager/view/components/drawer.dart';
-import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/chat_page.dart';
 import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/create_group_page.dart';
+import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/create_single_chat_page.dart';
 import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/group_chat_page.dart';
-import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/select_users_page.dart';
+import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/single_chat_page.dart';
 import 'package:stocksmanager/view/pages/system_app_pages/login_page.dart';
 import 'package:stocksmanager/view/pages/system_app_pages/search_page.dart';
 
@@ -27,20 +27,22 @@ class _ConversationPageState extends State<ConversationPage> {
 
   DateFormat formatter = DateFormat('dd/MM/yyyy');
 
-  Stream<List<UserModel>> userStream() {
+  Stream<List<SingleChatModel>> singleChatStream() {
     try {
       return _db
-          .collection('users')
-          .where('user_id', isNotEqualTo: auth.currentUser?.uid)
+          .collection('single_chat')
+          .where('members', arrayContains: auth.currentUser?.uid)
           .snapshots()
           .map((element) {
-        final List<UserModel> dataFromFireStore = <UserModel>[];
+        final List<SingleChatModel> dataFromFireStore = <SingleChatModel>[];
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
-          dataFromFireStore.add(UserModel.fromDocumentSnapshot(doc: doc));
+          dataFromFireStore.add(SingleChatModel.fromDocumentSnapshot(doc: doc));
         }
         return dataFromFireStore;
       });
     } catch (e) {
+      print('Error:');
+      print(e);
       rethrow;
     }
   }
@@ -132,7 +134,7 @@ class _ConversationPageState extends State<ConversationPage> {
                   Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => SelectUsersPage()));
+                          builder: (context) => CreateSingleChatPage()));
                 },
               ),
               SpeedDialChild(
@@ -148,8 +150,8 @@ class _ConversationPageState extends State<ConversationPage> {
           ),
           body: TabBarView(
             children: [
-              StreamBuilder<List<UserModel>>(
-                stream: userStream(),
+              StreamBuilder<List<SingleChatModel>>(
+                stream: singleChatStream(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(
@@ -166,7 +168,8 @@ class _ConversationPageState extends State<ConversationPage> {
                         ),
                         itemCount: snapshot.data!.length,
                         itemBuilder: (context, index) {
-                          UserModel? userSnapshot = snapshot.data![index];
+                          SingleChatModel? singleChatSnapshot =
+                              snapshot.data![index];
                           return Padding(
                             padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                             child: Container(
@@ -179,23 +182,26 @@ class _ConversationPageState extends State<ConversationPage> {
                                   radius: 30,
                                   child: ClipOval(
                                     child: Image.network(
-                                      userSnapshot.avatarUrl,
+                                      singleChatSnapshot.receiverImage,
                                       fit: BoxFit.cover,
-                                      width: 120.0,
-                                      height: 120.0,
+                                      height: 70,
+                                      width: 60,
                                     ),
                                   ),
                                 ),
-                                title: Text("${userSnapshot.name}"),
-                                subtitle: Text("last message goes here."),
+                                title:
+                                    Text("${singleChatSnapshot.receiverName}"),
+                                subtitle:
+                                    Text("${singleChatSnapshot.lastMessage}"),
                                 trailing:
-                                    Text(formatter.format(DateTime.now())),
+                                    Text("${singleChatSnapshot.lastDate}"),
                                 onTap: () {
                                   Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => ChatPage(
-                                              userModel: userSnapshot)));
+                                          builder: (context) => SingleChatPage(
+                                              singleChatModel:
+                                                  singleChatSnapshot)));
                                 },
                               ),
                             ),
@@ -269,180 +275,4 @@ class _ConversationPageState extends State<ConversationPage> {
       ),
     );
   }
-//  addAdvanceBottomSheets(context) {
-//    var timestamp = FieldValue.serverTimestamp();
-//    String dropdownValue = 'Office';
-//    DateTime currentDate = DateTime.now();
-//    DateFormat formatter = DateFormat('dd/MM/yyyy');
-//    String formattedDate = formatter.format(currentDate);
-//
-//    return showModalBottomSheet(
-//        backgroundColor: Colors.transparent,
-//        isScrollControlled: true,
-//        context: context,
-//        builder: (context) {
-//          return Padding(
-//            padding: const EdgeInsets.fromLTRB(0, 84, 0, 0),
-//            child: Container(
-//              height: double.infinity,
-//              decoration: const BoxDecoration(
-//                color: Colors.white,
-//                borderRadius: BorderRadius.only(
-//                  topLeft: Radius.circular(25.0),
-//                  topRight: Radius.circular(25.0),
-//                ),
-//              ),
-//              child: SingleChildScrollView(
-//                child: Padding(
-//                  padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
-//                  child: Column(
-//                    crossAxisAlignment: CrossAxisAlignment.start,
-//                    children: [
-//                      GestureDetector(
-//                        child: const Icon(
-//                          Icons.west,
-//                        ),
-//                        onTap: () {
-//                          Navigator.pop(context);
-//                        },
-//                      ),
-//                      const SizedBox(
-//                        height: 30,
-//                      ),
-//                      const Text(
-//                        'New advance record',
-//                        style: TextStyle(
-//                          fontSize: 30,
-//                        ),
-//                      ),
-//                      const SizedBox(
-//                        height: 30,
-//                      ),
-//                      const Padding(
-//                        padding: EdgeInsets.all(8.0),
-//                        child: Divider(
-//                          color: Colors.black54,
-//                          thickness: 0.8,
-//                        ),
-//                      ),
-//                      const SizedBox(
-//                        height: 30,
-//                      ),
-//                      NewInputField(
-//                        lable: "Seller's name",
-//                        controller: sellerController,
-//                        keyboard: TextInputType.text,
-//                      ),
-//                      NewInputField(
-//                        lable: "Buyer's name",
-//                        controller: buyerController,
-//                        keyboard: TextInputType.text,
-//                      ),
-//                      NewInputField(
-//                        lable: "Amount paid",
-//                        controller: amountPaidController,
-//                        keyboard: TextInputType.number,
-//                      ),
-//                      NewInputField(
-//                        lable: "Price for sale",
-//                        controller: priceController,
-//                        keyboard: TextInputType.number,
-//                      ),
-////                      NewInputField(
-////                        lable: "Status",
-////                        controller: statusController,
-////                        keyboard: TextInputType.text,
-////                      ),
-//                      Container(
-//                        width: double.infinity,
-//                        padding: const EdgeInsets.all(8),
-//                        child: DropdownButton<String>(
-//                          value: dropdownValue,
-//                          icon: const Icon(Icons.arrow_drop_down_circle),
-//                          elevation: 16,
-//                          style: const TextStyle(color: Colors.deepPurple),
-//                          onChanged: (String? newValue) {
-//                            setState(() {
-//                              dropdownValue = newValue!;
-//                            });
-//                          },
-//                          items: <String>['Office', 'Anayo']
-//                              .map<DropdownMenuItem<String>>((String value) {
-//                            return DropdownMenuItem<String>(
-//                              value: value,
-//                              child: Text(value),
-//                            );
-//                          }).toList(),
-//                        ),
-//                      ),
-//                      Padding(
-//                        padding: const EdgeInsets.fromLTRB(8, 32, 8, 0),
-//                        child: GestureDetector(
-//                          child: Container(
-//                            width: double.infinity,
-//                            height: 60,
-//                            padding: const EdgeInsets.all(8),
-//                            decoration: BoxDecoration(
-//                              color: Colors.amberAccent,
-//                              borderRadius: BorderRadius.circular(10),
-//                              boxShadow: const [
-//                                BoxShadow(
-//                                  color: Color.fromRGBO(143, 148, 251, 1),
-//                                  blurRadius: 10.0,
-//                                  offset: Offset(2, 6),
-//                                ),
-//                              ],
-//                            ),
-//                            child: const Center(
-//                              child: Text(
-//                                'Done',
-//                                style: TextStyle(
-//                                  color: Colors.white,
-//                                  fontSize: 20,
-//                                  fontWeight: FontWeight.bold,
-//                                  letterSpacing: 1,
-//                                ),
-//                              ),
-//                            ),
-//                          ),
-//                          onTap: () async {
-//                            await advance.add({
-//                              'seller': sellerController.text,
-//                              'buyer': buyerController.text,
-//                              'amount paid': amountPaidController.text,
-//                              'price': priceController.text,
-//                              'user_id': auth.currentUser?.uid,
-//                              'date': formattedDate,
-//                              'status': dropdownValue,
-//                              'timestamp': timestamp,
-//                            });
-//
-//                            sellerController.clear();
-//                            amountPaidController.clear();
-//                            priceController.clear();
-//                            buyerController.clear();
-//                            dateController.clear();
-//                            Navigator.pop(context);
-//                            Get.snackbar(
-//                                "Advance", "Document successfuly added.",
-//                                snackPosition: SnackPosition.BOTTOM,
-//                                borderRadius: 20,
-//                                duration: const Duration(seconds: 4),
-//                                margin: const EdgeInsets.all(15),
-//                                isDismissible: true,
-//                                dismissDirection: DismissDirection.horizontal,
-//                                forwardAnimationCurve: Curves.easeInOutBack);
-//                          },
-//                        ),
-//                      ),
-//                    ],
-//                  ),
-//                ),
-//              ),
-//            ),
-//          );
-//        });
-////  await Future.delayed(Duration(seconds: 5));
-////  Navigator.pop(context);
-//  }
 }

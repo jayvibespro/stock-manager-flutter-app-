@@ -2,24 +2,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:stocksmanager/models/user_model.dart';
+import 'package:stocksmanager/services/single_chat_service.dart';
 
-class SelectUsersPage extends StatefulWidget {
+class CreateSingleChatPage extends StatefulWidget {
   UserModel? usersModel;
 
   @override
-  _SelectUsersPageState createState() => _SelectUsersPageState();
+  _CreateSingleChatPageState createState() => _CreateSingleChatPageState();
 }
 
-class _SelectUsersPageState extends State<SelectUsersPage> {
-  var message = FirebaseFirestore.instance.collection('message');
-  var conversation = FirebaseFirestore.instance.collection('conversation');
-  TextEditingController messageController = TextEditingController();
-  var timestamp = FieldValue.serverTimestamp();
-  String receiverId = 'receiver-id';
-  String receiverName = 'Recepient:';
-  String senderName = 'userName';
+class _CreateSingleChatPageState extends State<CreateSingleChatPage> {
+  TextEditingController _messageController = TextEditingController();
+  // var timestamp = FieldValue.serverTimestamp();
+  String receiverId = '';
+  String receiverName = 'Recipient:';
+  String receiverEmail = '';
+  String receiverImage = '';
 
   final FirebaseAuth auth = FirebaseAuth.instance;
+
+  List<String> members = [];
 
   Stream<List<UserModel>> usersStream() {
     final _db = FirebaseFirestore.instance;
@@ -80,7 +82,7 @@ class _SelectUsersPageState extends State<SelectUsersPage> {
                     );
                   } else if (snapshot.hasError) {
                     return const Center(
-                      child: Text('An Error Occured...'),
+                      child: Text('An Error Occurred...'),
                     );
                   } else if (snapshot.hasData) {
                     return ListView.builder(
@@ -119,15 +121,17 @@ class _SelectUsersPageState extends State<SelectUsersPage> {
                                 receiverName = userSnapshot.name;
                               });
                               setState(() {
-                                senderName = auth.currentUser!.email!;
+                                receiverEmail = userSnapshot.email;
                               });
-                              print(senderName);
+                              setState(() {
+                                receiverImage = userSnapshot.avatarUrl;
+                              });
                             },
                           );
                         });
                   } else {
                     return const Center(
-                      child: Text('An Error Occured...'),
+                      child: Text('An Error Occurred...'),
                     );
                   }
                 },
@@ -156,33 +160,83 @@ class _SelectUsersPageState extends State<SelectUsersPage> {
               child: Row(
                 children: [
                   Expanded(
-                      child: TextField(
-                    controller: messageController,
-                  )),
-                  IconButton(
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25.0),
+                          borderSide: const BorderSide(color: Colors.white),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide:
+                              const BorderSide(color: Colors.white, width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide:
+                              const BorderSide(color: Colors.white, width: 2.0),
+                          borderRadius: BorderRadius.circular(25.0),
+                        ),
+                        hintText: 'Text message',
+                        fillColor: const Color(0xFFECF0F1),
+                        filled: true,
+                      ),
+                      minLines: 1,
+                      maxLines: 5,
+                    ),
+                  ),
+                  TextButton(
                     onPressed: () async {
-                      await message.add({
-                        'sender_id': auth.currentUser?.uid,
-                        'receiver_id': receiverId,
-                        'message': messageController.text,
-                        'timestamp': timestamp,
-                      });
-
-                      await conversation.add({
-                        'sender_id': auth.currentUser?.uid,
-                        'receiver_id': receiverId,
-                        'last_message': messageController.text,
-                        'timestamp': timestamp,
-                        'sender_name': auth.currentUser?.email,
-                        'receiver_name': receiverName,
-                      });
+                      if (_messageController.text == '') return;
 
                       setState(() {
-                        messageController.clear();
+                        members = [auth.currentUser!.uid, receiverId];
+                      });
+
+                      SingleChatService(
+                        members: members,
+                        lastMessage: _messageController.text,
+                        lastDate: '07/05/2022',
+                        receiverName: receiverName,
+                        receiverImage: receiverImage,
+                        receiverEmail: receiverEmail,
+                        message: _messageController.text,
+                        senderId: auth.currentUser?.uid,
+                        date: '06/05/2022',
+                      ).createChat();
+                      print('here no doc id found');
+                      var docInstance = await FirebaseFirestore.instance
+                          .collection('single_chat')
+                          .where('members',
+                              arrayContains: auth.currentUser?.uid)
+                          // .where('members', arrayContains: receiverId)
+                          .get();
+
+                      String docId = '';
+
+                      docInstance.docs.forEach((element) {
+                        setState(() {
+                          docId = element.id;
+                        });
+                      });
+                      print('single chat Id:');
+                      print(docId);
+
+                      setState(() {
+                        _messageController.clear();
                       });
                       Navigator.pop(context);
                     },
-                    icon: const Icon(Icons.arrow_upward),
+                    child: const CircleAvatar(
+                      radius: 28.0,
+                      backgroundColor: Color(0xFFECF0F1),
+                      child: Center(
+                        child: Icon(
+                          Icons.send,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
