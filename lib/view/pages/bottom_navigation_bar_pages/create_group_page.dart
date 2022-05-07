@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:stocksmanager/models/user_model.dart';
+import 'package:stocksmanager/services/group_services.dart';
 
 class CreateGroupPage extends StatefulWidget {
   UserModel? usersModel;
@@ -13,10 +15,10 @@ class CreateGroupPage extends StatefulWidget {
 }
 
 class _CreateGroupPageState extends State<CreateGroupPage> {
-  var message = FirebaseFirestore.instance.collection('message');
-  var conversation = FirebaseFirestore.instance.collection('conversation');
-  TextEditingController messageController = TextEditingController();
+  final TextEditingController _groupNameController = TextEditingController();
   var timestamp = FieldValue.serverTimestamp();
+
+  String userId = '';
 
   final FirebaseAuth auth = FirebaseAuth.instance;
 
@@ -24,18 +26,15 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
   final List<UserModel> groupMembers = [];
 
+  final List<String> membersIds = [];
+
   Stream<List<UserModel>> usersStream() {
     try {
-      return _db
-          .collection("users")
-          .where('user_id', isNotEqualTo: auth.currentUser?.uid)
-          .snapshots()
-          .map((element) {
+      return _db.collection("users").snapshots().map((element) {
         final List<UserModel> dataFromFireStore = <UserModel>[];
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
           dataFromFireStore.add(UserModel.fromDocumentSnapshot(doc: doc));
         }
-        print(dataFromFireStore);
         return dataFromFireStore;
       });
     } catch (e) {
@@ -61,7 +60,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
     }
   }
 
-  selectOtherUsers(String userId) {
+  selectOtherUsers() {
     try {
       return _db
           .collection("users")
@@ -70,6 +69,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
           .map((element) {
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
           groupMembers.add(UserModel.fromDocumentSnapshot(doc: doc));
+          membersIds.add(UserModel.fromDocumentSnapshot(doc: doc).userId);
         }
         print(groupMembers);
         return groupMembers;
@@ -142,40 +142,36 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                         itemBuilder: (context, index) {
                           UserModel? userSnapshot = snapshot.data![index];
                           return GestureDetector(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12.0),
-                              child: Column(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 45,
-                                    backgroundColor: Colors.white,
-                                    child: CircleAvatar(
-                                      radius: 40,
-                                      child: ClipOval(
-                                        child: Image.network(
-                                          userSnapshot.avatarUrl,
-                                          fit: BoxFit.cover,
-                                          width: 160.0,
-                                          height: 160.0,
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 45,
+                                      backgroundColor: Colors.white,
+                                      child: CircleAvatar(
+                                        radius: 40,
+                                        child: ClipOval(
+                                          child: Image.network(
+                                            userSnapshot.avatarUrl,
+                                            fit: BoxFit.cover,
+                                            width: 160.0,
+                                            height: 160.0,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  Text('${userSnapshot.name}'),
-                                ],
+                                    Text('${userSnapshot.name}'),
+                                  ],
+                                ),
                               ),
-                            ),
-                            onTap: () {
-                              setState(() {
-                                groupMembers.forEach((element) {
-                                  if (element.userId == userSnapshot.userId) {
-                                    return;
-                                  }
+                              onTap: () {
+                                setState(() {
+                                  userId = userSnapshot.userId;
                                 });
-                                selectOtherUsers(userSnapshot.userId);
+
+                                selectOtherUsers();
                               });
-                            },
-                          );
                         });
                   } else {
                     return const Center(
@@ -185,10 +181,11 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                 },
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20.0, 16, 20, 0),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20.0, 16, 20, 0),
               child: TextField(
-                decoration: InputDecoration(
+                controller: _groupNameController,
+                decoration: const InputDecoration(
                     hintText: 'Group name',
                     label: Text('Group name'),
                     border: InputBorder.none),
@@ -199,28 +196,52 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               child: Divider(),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: groupMembers.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: CircleAvatar(
-                      radius: 30,
-                      child: ClipOval(
-                        child: Image.network(
-                          groupMembers[index].avatarUrl,
-                          fit: BoxFit.cover,
-                          width: 120.0,
-                          height: 120.0,
+              child: StreamBuilder<List<UserModel>>(
+                stream: selectOtherUsers(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(
+                      child: Text('No Data Loaded...'),
+                    );
+                  } else if (snapshot.hasError) {
+                    return const Center(
+                      child: Text('An Error Occured...'),
+                    );
+                  } else if (snapshot.hasData) {
+                    return ListView.builder(
+                        scrollDirection: Axis.vertical,
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
                         ),
-                      ),
-                    ),
-                    title: Text("${groupMembers[index].name}"),
-                    subtitle: Text("${groupMembers[index].email}"),
-                    trailing:
-                        (groupMembers[index].userId == auth.currentUser!.uid)
-                            ? const Text('Admin')
-                            : const Text(''),
-                  );
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+                          UserModel? userSnapshot = snapshot.data![index];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              radius: 30,
+                              child: ClipOval(
+                                child: Image.network(
+                                  userSnapshot.avatarUrl,
+                                  fit: BoxFit.cover,
+                                  width: 120.0,
+                                  height: 120.0,
+                                ),
+                              ),
+                            ),
+                            title: Text("${userSnapshot.name}"),
+                            subtitle: Text("${userSnapshot.email}"),
+                            trailing:
+                                (userSnapshot.userId == auth.currentUser?.uid)
+                                    ? Text('admin')
+                                    : Text(''),
+                            onTap: () {},
+                          );
+                        });
+                  } else {
+                    return const Center(
+                      child: Text('An Error Occured...'),
+                    );
+                  }
                 },
               ),
             ),
@@ -254,7 +275,28 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                     ),
                   ),
                 ),
-                onTap: () {},
+                onTap: () {
+                  {
+                    GroupService(
+                      members: membersIds,
+                      name: _groupNameController.text,
+                      description: '',
+                      date: '12/07/2022',
+                      admin: auth.currentUser!.uid,
+                      lastMessage: '',
+                    ).createGroup();
+                  }
+                  print('group created success!');
+                  Get.snackbar("Message", "Group created successfully",
+                      snackPosition: SnackPosition.BOTTOM,
+                      borderRadius: 20,
+                      duration: const Duration(seconds: 4),
+                      margin: const EdgeInsets.all(15),
+                      isDismissible: true,
+                      dismissDirection: DismissDirection.horizontal,
+                      forwardAnimationCurve: Curves.easeInOutBack);
+                  Navigator.pop(context);
+                },
               ),
             ),
           ],

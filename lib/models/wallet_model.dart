@@ -2,15 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class WalletModel {
   String id;
+  int income;
+  int expense;
   String userId;
-  String balance;
-  String income;
-  String expense;
 
   WalletModel({
-    required this.id,
     required this.userId,
-    required this.balance,
+    required this.id,
     required this.income,
     required this.expense,
   });
@@ -20,7 +18,6 @@ class WalletModel {
     return WalletModel(
       id: doc.id,
       userId: doc.data()!['user_id'],
-      balance: doc.data()!['balance'],
       income: doc.data()!['income'],
       expense: doc.data()!['expense'],
     );

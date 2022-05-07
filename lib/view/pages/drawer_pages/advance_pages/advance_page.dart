@@ -327,7 +327,7 @@ class _AdvancePageState extends State<AdvancePage> {
                             dateController.clear();
                             Navigator.pop(context);
                             Get.snackbar(
-                                "Advance", "Document successfuly added.",
+                                "Advance", "Document successfully added.",
                                 snackPosition: SnackPosition.BOTTOM,
                                 borderRadius: 20,
                                 duration: const Duration(seconds: 4),

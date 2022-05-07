@@ -6,9 +6,11 @@ class GroupModel {
   String description;
   String date;
   String admin;
+  String lastMessage;
   List members;
 
   GroupModel({
+    required this.lastMessage,
     required this.admin,
     required this.id,
     required this.name,
@@ -22,6 +24,7 @@ class GroupModel {
     return GroupModel(
       id: doc.id,
       name: doc.data()!['name'],
+      lastMessage: doc.data()!['last_message'],
       admin: doc.data()!['admin'],
       members: doc.data()!['members'],
       description: doc.data()!['description'],

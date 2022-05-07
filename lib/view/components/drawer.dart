@@ -3,11 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:stocksmanager/models/user_model.dart';
+import 'package:stocksmanager/models/wallet_model.dart';
+import 'package:stocksmanager/view/pages/drawer_pages/expenses_pages/expenses_page.dart';
 import 'package:stocksmanager/view/pages/drawer_pages/income_pages/income_page.dart';
 
 import '../pages/drawer_pages/advance_pages/advance_page.dart';
 import '../pages/drawer_pages/all_customers_page.dart';
-import '../pages/drawer_pages/expenses_pages/expenses_page.dart';
 import '../pages/drawer_pages/home_page.dart';
 import '../pages/drawer_pages/machine_page.dart';
 import '../pages/drawer_pages/pumba.dart';
@@ -38,7 +39,24 @@ class _NewDrawerState extends State<NewDrawer> {
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
           dataFromFireStore.add(UserModel.fromDocumentSnapshot(doc: doc));
         }
-        print(dataFromFireStore);
+        return dataFromFireStore;
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Stream<List<WalletModel>> walletStream() {
+    try {
+      return _db
+          .collection('wallet')
+          .where('user_id', isEqualTo: auth.currentUser?.uid)
+          .snapshots()
+          .map((element) {
+        final List<WalletModel> dataFromFireStore = <WalletModel>[];
+        for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
+          dataFromFireStore.add(WalletModel.fromDocumentSnapshot(doc: doc));
+        }
         return dataFromFireStore;
       });
     } catch (e) {
@@ -66,7 +84,7 @@ class _NewDrawerState extends State<NewDrawer> {
                       );
                     } else if (snapshot.hasError) {
                       return const Center(
-                        child: Text('An Error Occured...'),
+                        child: Text('An Error Occurred...'),
                       );
                     } else if (snapshot.hasData) {
                       return ListView.builder(
@@ -82,7 +100,7 @@ class _NewDrawerState extends State<NewDrawer> {
                           });
                     } else {
                       return const Center(
-                        child: Text('An Error Occured...'),
+                        child: Text('An Error Occurred...'),
                       );
                     }
                   },
@@ -97,9 +115,38 @@ class _NewDrawerState extends State<NewDrawer> {
               ),
             ),
           ),
-          const ListTile(
-            title: Text('Balance:'),
-            trailing: Text('Tsh 10,456,450/='),
+          StreamBuilder<List<WalletModel>>(
+            stream: walletStream(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: Text('No data Loaded...'),
+                );
+              } else if (snapshot.hasError) {
+                return const Center(
+                  child: Text('An Error Occurred...'),
+                );
+              } else if (snapshot.hasData) {
+                return Container(
+                  height: 70,
+                  child: ListView.builder(
+                      reverse: true,
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        WalletModel? walletSnapshot = snapshot.data![index];
+                        return ListTile(
+                          leading: const Text('Balance:'),
+                          trailing: Text(
+                              'Tsh ${walletSnapshot.income - walletSnapshot.expense}/='),
+                        );
+                      }),
+                );
+              } else {
+                return const Center(
+                  child: Text('An Error Occurred...'),
+                );
+              }
+            },
           ),
           ListTile(
             leading: const Icon(Icons.home),
@@ -142,22 +189,82 @@ class _NewDrawerState extends State<NewDrawer> {
                     MaterialPageRoute(
                         builder: (context) => AllCustomersPage()));
               }),
-          ListTile(
-            leading: const Icon(Icons.payment),
-            title: const Text('Income'),
-            trailing: const Text('Tsh 6,885,000/='),
-            onTap: () {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => IncomePage()));
+          StreamBuilder<List<WalletModel>>(
+            stream: walletStream(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: Text('No data Loaded...'),
+                );
+              } else if (snapshot.hasError) {
+                return const Center(
+                  child: Text('An Error Occurred...'),
+                );
+              } else if (snapshot.hasData) {
+                return Container(
+                  height: 70,
+                  child: ListView.builder(
+                      reverse: true,
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        WalletModel? walletSnapshot = snapshot.data![index];
+                        return ListTile(
+                          leading: const Icon(Icons.payment),
+                          title: const Text('Income'),
+                          trailing: Text('Tsh ${walletSnapshot.income}/='),
+                          onTap: () {
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => IncomePage()));
+                          },
+                        );
+                      }),
+                );
+              } else {
+                return const Center(
+                  child: Text('An Error Occurred...'),
+                );
+              }
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.paid),
-            title: const Text('EXpenses'),
-            trailing: const Text('Tsh 809,000/='),
-            onTap: () {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => ExpensesPage()));
+          StreamBuilder<List<WalletModel>>(
+            stream: walletStream(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: Text('No data Loaded...'),
+                );
+              } else if (snapshot.hasError) {
+                return const Center(
+                  child: Text('An Error Occurred...'),
+                );
+              } else if (snapshot.hasData) {
+                return Container(
+                  height: 70,
+                  child: ListView.builder(
+                      reverse: true,
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (context, index) {
+                        WalletModel? walletSnapshot = snapshot.data![index];
+                        return ListTile(
+                          leading: const Icon(Icons.paid),
+                          title: const Text('Expense'),
+                          trailing: Text('Tsh ${walletSnapshot.expense}/='),
+                          onTap: () {
+                            Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ExpensesPage()));
+                          },
+                        );
+                      }),
+                );
+              } else {
+                return const Center(
+                  child: Text('An Error Occurred...'),
+                );
+              }
             },
           ),
           ListTile(

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:stocksmanager/services/auth_services.dart';
+import 'package:stocksmanager/services/wallet_service.dart';
 
 import '../drawer_pages/home_page.dart';
 import 'login_page.dart';
@@ -162,10 +163,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                 password: passwordController!.text)
                             .createUser(userNameController.text);
                         await Future.delayed(const Duration(seconds: 3));
+
                         if (auth.currentUser != null) {
                           setState(() {
                             isLoading = false;
                           });
+
+                          WalletService(
+                            userId: auth.currentUser?.uid,
+                            income: 0,
+                            expense: 0,
+                          ).createWallet();
 
                           Navigator.push(
                               context,

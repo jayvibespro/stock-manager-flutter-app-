@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:stocksmanager/models/group_model.dart';
 import 'package:stocksmanager/models/user_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
 import 'package:stocksmanager/view/components/drawer.dart';
 import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/chat_page.dart';
 import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/create_group_page.dart';
+import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/group_chat_page.dart';
 import 'package:stocksmanager/view/pages/bottom_navigation_bar_pages/select_users_page.dart';
 import 'package:stocksmanager/view/pages/system_app_pages/login_page.dart';
 import 'package:stocksmanager/view/pages/system_app_pages/search_page.dart';
@@ -36,7 +38,24 @@ class _ConversationPageState extends State<ConversationPage> {
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
           dataFromFireStore.add(UserModel.fromDocumentSnapshot(doc: doc));
         }
-        print(dataFromFireStore);
+        return dataFromFireStore;
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Stream<List<GroupModel>> groupStream() {
+    try {
+      return _db
+          .collection('groups')
+          .where('members', arrayContains: auth.currentUser?.uid)
+          .snapshots()
+          .map((element) {
+        final List<GroupModel> dataFromFireStore = <GroupModel>[];
+        for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
+          dataFromFireStore.add(GroupModel.fromDocumentSnapshot(doc: doc));
+        }
         return dataFromFireStore;
       });
     } catch (e) {
@@ -117,14 +136,14 @@ class _ConversationPageState extends State<ConversationPage> {
                 },
               ),
               SpeedDialChild(
-                  child: const Icon(Icons.group), label: 'Create Group',
-                  onTap: (){
+                  child: const Icon(Icons.group),
+                  label: 'Create Group',
+                  onTap: () {
                     Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => CreateGroupPage()));
-                  }
-                  ),
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CreateGroupPage()));
+                  }),
             ],
           ),
           body: TabBarView(
@@ -138,7 +157,7 @@ class _ConversationPageState extends State<ConversationPage> {
                     );
                   } else if (snapshot.hasError) {
                     return const Center(
-                      child: Text('An Error Occured...'),
+                      child: Text('An Error Occurred...'),
                     );
                   } else if (snapshot.hasData) {
                     return ListView.builder(
@@ -184,13 +203,65 @@ class _ConversationPageState extends State<ConversationPage> {
                         });
                   } else {
                     return const Center(
-                      child: Text('An Error Occured...'),
+                      child: Text('An Error Occurred...'),
                     );
                   }
                 },
               ),
-              const Center(
-                child: Text('groups'),
+              StreamBuilder<List<GroupModel>>(
+                stream: groupStream(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(
+                      child: Text('No data Loaded...'),
+                    );
+                  } else if (snapshot.hasError) {
+                    return const Center(
+                      child: Text('An Error Occurred...'),
+                    );
+                  } else if (snapshot.hasData) {
+                    return ListView.builder(
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        itemCount: snapshot.data!.length,
+                        itemBuilder: (context, index) {
+                          GroupModel? groupSnapshot = snapshot.data![index];
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF0F3F4),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: ListTile(
+                                leading: const CircleAvatar(
+                                  radius: 30,
+                                  child: ClipOval(
+                                    child: Icon(Icons.group),
+                                  ),
+                                ),
+                                title: Text("${groupSnapshot.name}"),
+                                subtitle: Text("${groupSnapshot.lastMessage}"),
+                                trailing:
+                                    Text(formatter.format(DateTime.now())),
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => GroupChatPage(
+                                              groupModel: groupSnapshot)));
+                                },
+                              ),
+                            ),
+                          );
+                        });
+                  } else {
+                    return const Center(
+                      child: Text('An Error Occurred...'),
+                    );
+                  }
+                },
               ),
             ],
           ),

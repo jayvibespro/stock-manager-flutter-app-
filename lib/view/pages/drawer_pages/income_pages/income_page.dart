@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:stocksmanager/models/income_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
+import 'package:stocksmanager/services/wallet_service.dart';
 import 'package:stocksmanager/view/components/drawer.dart';
 
 import '../../system_app_pages/login_page.dart';
@@ -128,7 +129,7 @@ class _IncomePageState extends State<IncomePage> {
                 });
           } else {
             return const Center(
-              child: Text('An Error Occured...'),
+              child: Text('An Error Occurred...'),
             );
           }
         },
@@ -194,6 +195,26 @@ class _IncomePageState extends State<IncomePage> {
                                   color: Colors.red,
                                 ),
                                 onPressed: () async {
+
+                                 var incomeSnapshot = await FirebaseFirestore
+                                .instance
+                                .collection('wallet')
+                                .where('user_id',
+                                    isEqualTo: auth.currentUser!.uid)
+                                .get();
+                            int availableIncome = 0;
+                            String id = '';
+
+                            incomeSnapshot.docs.forEach((element) {
+                              setState(() {
+                                id = element.id;
+                                availableIncome = element['income'] - int.parse(incomeDataModel!.amount);
+                              });
+                            });
+                            
+                            WalletService(id: id, income: availableIncome)
+                                .updateIncome();
+
                                   await income
                                       .doc(incomeDataModel?.id)
                                       .delete();
@@ -357,6 +378,26 @@ class _IncomePageState extends State<IncomePage> {
                               'timestamp': timestamp,
                             });
 
+                            var incomeSnapshot = await FirebaseFirestore
+                                .instance
+                                .collection('wallet')
+                                .where('user_id',
+                                    isEqualTo: auth.currentUser!.uid)
+                                .get();
+                            int availableIncome = 0;
+                            String id = '';
+
+                            incomeSnapshot.docs.forEach((element) {
+                              setState(() {
+                                id = element.id;
+                                availableIncome = element['income'];
+                              });
+                            });
+                            int updateValue = int.parse(amountController.text) +
+                                availableIncome;
+                            WalletService(id: id, income: updateValue)
+                                .updateIncome();
+
                             setState(() {
                               nameController.clear();
                               amountController.clear();
@@ -500,6 +541,27 @@ class _IncomePageState extends State<IncomePage> {
                               'description': descriptionController.text,
                               'date': dateController.text,
                             });
+
+                            var incomeSnapshot = await FirebaseFirestore
+                                .instance
+                                .collection('wallet')
+                                .where('user_id',
+                                    isEqualTo: auth.currentUser!.uid)
+                                .get();
+                            int availableIncome = 0;
+                            String id = '';
+
+                            incomeSnapshot.docs.forEach((element) {
+                              setState(() {
+                                id = element.id;
+                                availableIncome = element['income'] - int.parse(incomeDataModel!.amount);
+                              });
+                            });
+                            int updateValue = int.parse(amountController.text) +
+                                availableIncome;
+                            WalletService(id: id, income: updateValue)
+                                .updateIncome();
+
                             setState(() {
                               nameController.clear();
                               amountController.clear();

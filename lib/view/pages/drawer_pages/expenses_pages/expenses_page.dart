@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:stocksmanager/models/income_model.dart';
 import 'package:stocksmanager/services/auth_services.dart';
+import 'package:stocksmanager/services/wallet_service.dart';
 import 'package:stocksmanager/view/components/drawer.dart';
 
 import '../../system_app_pages/login_page.dart';
@@ -128,7 +129,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
                 });
           } else {
             return const Center(
-              child: Text('An Error Occured...'),
+              child: Text('An Error Occurred...'),
             );
           }
         },
@@ -190,6 +191,26 @@ class _ExpensesPageState extends State<ExpensesPage> {
                               ),
                               IconButton(
                                 onPressed: () async {
+
+                                var incomeSnapshot = await FirebaseFirestore
+                                .instance
+                                .collection('wallet')
+                                .where('user_id',
+                                    isEqualTo: auth.currentUser!.uid)
+                                .get();
+                            int availableExpense = 0;
+                            String id = '';
+
+                            incomeSnapshot.docs.forEach((element) {
+                              setState(() {
+                                id = element.id;
+                                availableExpense = element['expense'] - int.parse(expensesDataModel!.amount);
+                              });
+                            });
+                            
+                            WalletService(id: id, expense: availableExpense)
+                                .updateExpense();
+
                                   await expenses
                                       .doc(expensesDataModel?.id)
                                       .delete();
@@ -288,7 +309,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
                         height: 30,
                       ),
                       const Text(
-                        'New income record',
+                        'New Expense record',
                         style: TextStyle(
                           fontSize: 30,
                         ),
@@ -357,6 +378,27 @@ class _ExpensesPageState extends State<ExpensesPage> {
                               'user_id': auth.currentUser?.uid,
                               'timestamp': timestamp,
                             });
+
+                            var expenseSnapshot = await FirebaseFirestore
+                                .instance
+                                .collection('wallet')
+                                .where('user_id',
+                                    isEqualTo: auth.currentUser!.uid)
+                                .get();
+                            int availableExpense = 0;
+                            String id = '';
+
+                            expenseSnapshot.docs.forEach((element) {
+                              setState(() {
+                                id = element.id;
+                                availableExpense = element['expense'];
+                              });
+                            });
+                            int updateValue = int.parse(amountController.text) +
+                                availableExpense;
+                            WalletService(id: id, expense: updateValue)
+                                .updateExpense();
+
                             setState(() {
                               nameController.clear();
                               amountController.clear();
@@ -498,6 +540,28 @@ class _ExpensesPageState extends State<ExpensesPage> {
                               'description': descriptionController.text,
                               'date': dateController.text,
                             });
+
+
+                                var expenseSnapshot = await FirebaseFirestore
+                                .instance
+                                .collection('wallet')
+                                .where('user_id',
+                                    isEqualTo: auth.currentUser!.uid)
+                                .get();
+                            int availableExpense = 0;
+                            String id = '';
+
+                            expenseSnapshot.docs.forEach((element) {
+                              setState(() {
+                                id = element.id;
+                                availableExpense = element['expense'] - int.parse(expenseDataModel!.amount);
+                              });
+                            });
+                            int updateValue = int.parse(amountController.text) +
+                                availableExpense;
+                            WalletService(id: id, expense: updateValue)
+                                .updateExpense();
+
                             setState(() {
                               nameController.clear();
                               amountController.clear();
