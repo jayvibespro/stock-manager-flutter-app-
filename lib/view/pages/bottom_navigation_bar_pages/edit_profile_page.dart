@@ -14,7 +14,7 @@ class EditProfilePage extends StatefulWidget {
   @override
   _EditProfilePageState createState() => _EditProfilePageState();
 
-  EditProfilePage({this.userModel});
+  EditProfilePage({super.key, this.userModel});
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
@@ -39,7 +39,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         this.image = imageTemporary;
       });
     } on PlatformException catch (e) {
-      print('Failed to pick imag: $e');
+      print('Failed to pick image: $e');
     }
 
     if (image == null) return;
@@ -57,7 +57,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     setState(() {
       avatarUrl = downloadUrl;
     });
-    print(avatarUrl);
   }
 
   Future uploadImage() async {
@@ -76,7 +75,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     setState(() {
       avatarUrl = downloadUrl;
     });
-    print(avatarUrl);
   }
 
   @override

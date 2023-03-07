@@ -43,7 +43,6 @@ class _ExpensesPageState extends State<ExpensesPage> {
         for (final DocumentSnapshot<Map<String, dynamic>> doc in element.docs) {
           dataFromFireStore.add(ExpensesModel.fromDocumentSnapshot(doc: doc));
         }
-        print(dataFromFireStore);
         return dataFromFireStore;
       });
     } catch (e) {
@@ -191,25 +190,26 @@ class _ExpensesPageState extends State<ExpensesPage> {
                               ),
                               IconButton(
                                 onPressed: () async {
+                                  var incomeSnapshot = await FirebaseFirestore
+                                      .instance
+                                      .collection('wallet')
+                                      .where('user_id',
+                                          isEqualTo: auth.currentUser!.uid)
+                                      .get();
+                                  int availableExpense = 0;
+                                  String id = '';
 
-                                var incomeSnapshot = await FirebaseFirestore
-                                .instance
-                                .collection('wallet')
-                                .where('user_id',
-                                    isEqualTo: auth.currentUser!.uid)
-                                .get();
-                            int availableExpense = 0;
-                            String id = '';
+                                  incomeSnapshot.docs.forEach((element) {
+                                    setState(() {
+                                      id = element.id;
+                                      availableExpense = element['expense'] -
+                                          int.parse(expensesDataModel!.amount);
+                                    });
+                                  });
 
-                            incomeSnapshot.docs.forEach((element) {
-                              setState(() {
-                                id = element.id;
-                                availableExpense = element['expense'] - int.parse(expensesDataModel!.amount);
-                              });
-                            });
-                            
-                            WalletService(id: id, expense: availableExpense)
-                                .updateExpense();
+                                  WalletService(
+                                          id: id, expense: availableExpense)
+                                      .updateExpense();
 
                                   await expenses
                                       .doc(expensesDataModel?.id)
@@ -541,8 +541,7 @@ class _ExpensesPageState extends State<ExpensesPage> {
                               'date': dateController.text,
                             });
 
-
-                                var expenseSnapshot = await FirebaseFirestore
+                            var expenseSnapshot = await FirebaseFirestore
                                 .instance
                                 .collection('wallet')
                                 .where('user_id',
@@ -554,7 +553,8 @@ class _ExpensesPageState extends State<ExpensesPage> {
                             expenseSnapshot.docs.forEach((element) {
                               setState(() {
                                 id = element.id;
-                                availableExpense = element['expense'] - int.parse(expenseDataModel!.amount);
+                                availableExpense = element['expense'] -
+                                    int.parse(expenseDataModel!.amount);
                               });
                             });
                             int updateValue = int.parse(amountController.text) +

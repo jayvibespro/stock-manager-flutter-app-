@@ -8,6 +8,8 @@ import '../drawer_pages/home_page.dart';
 import 'login_page.dart';
 
 class RegistrationPage extends StatefulWidget {
+  const RegistrationPage({super.key});
+
   @override
   _RegistrationPageState createState() => _RegistrationPageState();
 }

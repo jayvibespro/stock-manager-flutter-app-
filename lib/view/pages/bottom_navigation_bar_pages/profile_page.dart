@@ -86,7 +86,7 @@ class _ProfilePageState extends State<ProfilePage> {
             );
           } else if (snapshot.hasError) {
             return const Center(
-              child: Text('An Error Occured...'),
+              child: Text('An Error Occurred...'),
             );
           } else if (snapshot.hasData) {
             return ListView.builder(
